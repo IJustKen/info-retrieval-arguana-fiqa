@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IR Comparison System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f5f5f5;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            background: #f5f5f5;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            color: #666;
+        }
+
+        .tab-button:hover {
+            background: #ececec;
+        }
+
+        .tab-button.active {
+            background: white;
+            border-bottom: 3px solid #667eea;
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+            padding: 40px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            margin-bottom: 30px;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 5px;
+            height: 30px;
+            background: #667eea;
+            margin-right: 15px;
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1em;
+            transition: border 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-idle {
+            background: #ccc;
+        }
+
+        .status-training {
+            background: #ffc107;
+            animation: pulse 1s infinite;
+        }
+
+        .status-completed {
+            background: #28a745;
+        }
+
+        .status-error {
+            background: #dc3545;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .info-box {
+            background: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            color: #333;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .result-card {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .result-card:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .result-rank {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .result-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+
+        .result-score {
+            background: #e0e7ff;
+            color: #667eea;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+
+        .result-summary {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .result-id {
+            color: #999;
+            font-size: 0.85em;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+        /* AI Overview Box */
+        .ai-overview-box {
+            background: linear-gradient(135deg, #f0f4ff 0%, #e8f0fe 100%);
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            display: none; /* Hidden by default */
+        }
+
+        .ai-overview-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .sparkle-icon {
+            font-size: 1.5em;
+            margin-right: 10px;
+        }
+
+        .ai-overview-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #667eea;
+            margin: 0;
+        }
+
+        .ai-summary-text {
+            font-size: 1.05em;
+            line-height: 1.6;
+            color: #333;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .ai-loading {
+            color: #999;
+            font-style: italic;
+        }
+        .metric-item { margin-right: 15px; }
+        .metric-value { font-weight: bold; color: #333; }
+        .did-you-mean { color: #d93025; font-weight: bold; cursor: pointer; text-decoration: underline; }
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }
+
+        .comparison-table thead {
+            background: #f5f5f5;
+        }
+
+        .comparison-table th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid #e0e0e0;
+            color: #333;
+        }
+
+        .comparison-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .comparison-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        .improvement-positive {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        .improvement-negative {
+            color: #dc3545;
+            font-weight: 600;
+        }
+
+        .comparison-charts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .chart-container {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .chart-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .bar-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            height: 150px;
+        }
+
+        .bar {
+            flex: 1;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 6px 6px 0 0;
+            position: relative;
+            min-width: 40px;
+        }
+
+        .bar-label {
+            position: absolute;
+            bottom: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .bar-value {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .row-full {
+            grid-column: 1 / -1;
+        }
+        /* Status List Styles */
+        .status-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: white;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            transition: all 0.3s;
+        }
+
+        .status-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .status-icon-container {
+            width: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 15px;
+        }
+
+        /* The Circle */
+        .status-circle {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background-color: #e0e0e0; /* Default Grey */
+            border: 2px solid #ccc;
+            transition: all 0.3s ease;
+        }
+
+        /* State: Running (Yellow Pulse) */
+        .status-circle.running {
+            background-color: #ffc107;
+            border-color: #ffca2c;
+            box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7);
+            animation: pulse-yellow 1.5s infinite;
+        }
+
+        /* State: Completed (Green) */
+        .status-circle.completed {
+            background-color: #28a745;
+            border-color: #28a745;
+            transform: scale(1.1);
+        }
+
+        /* State: Error (Red) */
+        .status-circle.error {
+            background-color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .status-text { flex: 1; }
+        .status-title { font-weight: 600; color: #333; font-size: 1em; }
+        .status-desc { color: #888; font-size: 0.85em; margin-top: 2px; }
+
+        @keyframes pulse-yellow {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+        }
+
+
+        @media (max-width: 768px) {
+            .row {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .comparison-table {
+                font-size: 0.9em;
+            }
+
+            .comparison-table th, .comparison-table td {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 Information Retrieval Comparison</h1>
+            <p>Compare TF-IDF, BM25 and Cross-Encoder Retrieval Methods</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('training')">Training</button>
+            <button class="tab-button" onclick="switchTab('search')">Search & Query</button>
+            <button class="tab-button" onclick="switchTab('comparison')">Comparison</button>
+        </div>
+
+        <!-- TRAINING TAB -->
+        <div id="training" class="tab-content active">
+            <h2 class="section-title">Model Training</h2>
+
+            <div class="info-box">
+                ℹ️ Select a dataset and click "Start Training" to prepare all three retrieval models. This process runs once per dataset and creates cached indexes for fast querying.
+            </div>
+
+            <div class="form-group">
+                <label for="training-dataset">Select Dataset</label>
+                <select id="training-dataset">
+                    <option value="nq">Natural Questions (Large - 2.68M docs)</option>
+                    <option value="arguana">ArguAna (Small - 8.6k docs)</option>
+                    <option value="fiqa">FIQA-2018 (Medium - 57,638 docs)</option>
+                </select>
+            </div>
+
+            <div id="training-status-container" style="margin-top: 30px;">
+                <h3 style="margin-bottom: 20px; color: #333;">Training Pipeline</h3>
+                
+                <!-- 1. Loading Dataset -->
+                <div class="status-item">
+                    <div class="status-icon-container">
+                        <div class="status-circle" id="status-circle-loading"></div>
+                    </div>
+                    <div class="status-text">
+                        <div class="status-title">Loading Dataset</div>
+                        <div class="status-desc" id="desc-loading">Waiting to start...</div>
+                    </div>
+                </div>
+
+                <!-- 2. Training BM25 -->
+                <div class="status-item">
+                    <div class="status-icon-container">
+                        <div class="status-circle" id="status-circle-bm25"></div>
+                    </div>
+                    <div class="status-text">
+                        <div class="status-title">Training BM25 Index</div>
+                        <div class="status-desc" id="desc-bm25">Waiting...</div>
+                    </div>
+                </div>
+
+                <!-- 3. Training TF-IDF -->
+                <div class="status-item">
+                    <div class="status-icon-container">
+                        <div class="status-circle" id="status-circle-tfidf"></div>
+                    </div>
+                    <div class="status-text">
+                        <div class="status-title">Training TF-IDF Vectorizer</div>
+                        <div class="status-desc" id="desc-tfidf">Waiting...</div>
+                    </div>
+                </div>
+
+                <!-- 4. Loading Models -->
+                <div class="status-item">
+                    <div class="status-icon-container">
+                        <div class="status-circle" id="status-circle-crossencoder"></div>
+                    </div>
+                    <div class="status-text">
+                        <div class="status-title">Loading Cross-Encoder & Spell Checker</div>
+                        <div class="status-desc" id="desc-crossencoder">Waiting...</div>
+                    </div>
+                </div>
+            </div>
+
+
+            <button onclick="startTraining()" id="train-button" style="width: 100%; padding: 15px; font-size: 1.1em;">
+                ⚡ Start Training
+            </button>
+
+            <div id="training-message" style="margin-top: 20px; display: none;"></div>
+        </div>
+
+        <!-- SEARCH TAB -->
+        <div id="search" class="tab-content">
+            <h2 class="section-title">Search & Query</h2>
+
+            <div class="info-box">
+                ℹ️ Enter a query and select a retrieval method to search the trained models. Results show the top 10 most relevant documents.
+            </div>
+
+            <div class="row">
+                <div class="form-group">
+                    <label for="search-dataset">Dataset</label>
+                    <select id="search-dataset">
+                        <option value="nq">Natural Questions</option>
+                        <option value="arguana">ArguAna</option>
+                        <option value="fiqa">FIQA-2018</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="search-method">Retrieval Method</label>
+                    <select id="search-method">
+                        <option value="tfidf">TF-IDF</option>
+                        <option value="bm25">BM25</option>
+                        <option value="crossencoder">BM25 + Cross-Encoder</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group row-full">
+                <label for="search-query">Enter Your Query</label>
+                <input type="text" id="search-query" placeholder="Enter argument for ArguAna; Finance related query for FiQA.." />
+            </div>
+
+            <button onclick="performSearch()" style="width: 100%; padding: 15px; font-size: 1.1em;">
+                🔍 Search
+            </button>
+
+            <!--show metrics time-->
+            <div id="search-metrics" style="
+                display: none;
+                margin-bottom: 15px;
+                padding: 10px;
+                background: #f8f9fa;
+                border-radius: 6px;
+                color: #555;
+                font-size: 0.9em;
+                border: 1px solid #e0e0e0;">
+            </div>
+
+            <!--ai summary box-->
+            <div id="ai-overview-box" class="ai-overview-box">
+                <div class="ai-overview-header">
+                    <h3 class="ai-overview-title">AI Summary</h3>
+                </div>
+                <div id="ai-summary-text" class="ai-summary-text">
+                    <span class="ai-loading">Generating answer...</span>
+                </div>
+            </div>
+
+            <!--search results display-->
+            <div id="search-results" style="margin-top: 30px;"></div>
+
+        </div>
+
+        <!-- COMPARISON TAB -->
+        <div id="comparison" class="tab-content">
+            <h2 class="section-title">Model Comparison</h2>
+
+            <div class="info-box">
+                ℹ️ Compare performance of all three retrieval methods on 25 test queries. Shows metrics including NDCG, Precision@K, and MAP with improvements over baseline.
+            </div>
+
+            <div class="form-group">
+                <label for="comparison-dataset">Dataset</label>
+                <select id="comparison-dataset">
+                    <option value="nq">Natural Questions</option>
+                    <option value="arguana">ArguAna</option>
+                    <option value="fiqa">FIQA-2018</option>
+                </select>
+            </div>
+
+            <button onclick="runEvaluation()" style="width: 100%; padding: 15px; font-size: 1.1em;">
+                📊 Run Evaluation (25 test queries)
+            </button>
+
+            <div id="comparison-results" style="margin-top: 30px;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let availableDatasets = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDatasets();
+            checkTrainingStatus();
+            setInterval(checkTrainingStatus, 2000);
+        });
+
+        function switchTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        async function loadDatasets() {
+            try {
+                const response = await fetch(`${API_BASE}/datasets`);
+                const data = await response.json();
+
+                data.datasets.forEach(ds => {
+                    availableDatasets[ds.id] = ds;
+                });
+            } catch (error) {
+                console.error('Error loading datasets:', error);
+            }
+        }
+
+        async function startTraining() {
+            const dataset = document.getElementById('training-dataset').value;
+            const button = document.getElementById('train-button');
+
+            button.disabled = true;
+            document.getElementById('training-message').style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_BASE}/train`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dataset })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('training', 'Training started! This may take several minutes...', 'success');
+                } else if (data.status === 'already_training') {
+                    showMessage('training', 'Training is already in progress...', 'info');
+                } else {
+                    showMessage('training', 'Error: ' + data.error, 'error');
+                }
+            } catch (error) {
+                showMessage('training', 'Connection error: ' + error.message, 'error');
+            }
+        }
+
+        async function checkTrainingStatus() {
+            const dataset = document.getElementById('training-dataset').value;
+            try {
+                const response = await fetch(`${API_BASE}/training-status/${dataset}`);
+                const data = await response.json();
+                const p = data.progress || 0; // 0 to 100
+
+                // Helper to update UI
+                const updateState = (id, state, text) => {
+                    const circle = document.getElementById(`status-circle-${id}`);
+                    const desc = document.getElementById(`desc-${id}`);
+                    
+                    // Reset classes
+                    circle.className = 'status-circle';
+                    
+                    if (state === 'waiting') {
+                        desc.textContent = 'Waiting...';
+                    } else if (state === 'running') {
+                        circle.classList.add('running');
+                        desc.textContent = 'In progress...';
+                        desc.style.color = '#d39e00';
+                    } else if (state === 'completed') {
+                        circle.classList.add('completed');
+                        desc.textContent = '✓ Done';
+                        desc.style.color = '#28a745';
+                    }
+                };
+
+                // Logic to determine state based on progress %
+                // 0-20: Loading Dataset
+                // 20-50: BM25
+                // 50-75: TF-IDF
+                // 75-100: CrossEncoder/SpellCheck
+
+                if (data.status === 'not_started') {
+                    ['loading', 'bm25', 'tfidf', 'crossencoder'].forEach(id => updateState(id, 'waiting'));
+                } else if (data.status === 'error') {
+                    // Handle error (maybe turn current one red)
+                } else {
+                    // 1. Dataset
+                    if (p < 20) updateState('loading', 'running');
+                    else updateState('loading', 'completed');
+
+                    // 2. BM25
+                    if (p >= 20 && p < 50) updateState('bm25', 'running');
+                    else if (p < 20) updateState('bm25', 'waiting');
+                    else updateState('bm25', 'completed');
+
+                    // 3. TF-IDF
+                    if (p >= 50 && p < 75) updateState('tfidf', 'running');
+                    else if (p < 50) updateState('tfidf', 'waiting');
+                    else updateState('tfidf', 'completed');
+
+                    // 4. Models
+                    if (p >= 75 && p < 100) updateState('crossencoder', 'running');
+                    else if (p < 75) updateState('crossencoder', 'waiting');
+                    else updateState('crossencoder', 'completed');
+                }
+
+                if (data.is_trained) {
+                    document.getElementById('train-button').style.display = 'none';
+                    showMessage('training', '✓ Pipeline is fully trained!', 'success');
+                    // Ensure all are green
+                    ['loading', 'bm25', 'tfidf', 'crossencoder'].forEach(id => updateState(id, 'completed'));
+                }
+
+            } catch (error) {
+                console.error('Error checking status:', error);
+            }
+        }
+
+
+        async function performSearch() {
+            const dataset = document.getElementById('search-dataset').value;
+            const method = document.getElementById('search-method').value;
+            const queryInput = document.getElementById('search-query');
+            const query = queryInput.value;
+
+            if (!query.trim()) {
+                showMessage('search', 'Please enter a query', 'error');
+                return;
+            }
+
+            // Get Elements
+            const resultsDiv = document.getElementById('search-results');
+            const aiBox = document.getElementById('ai-overview-box');
+            const aiText = document.getElementById('ai-summary-text');
+            const metricsDiv = document.getElementById('search-metrics');
+
+            // Reset UI state
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Searching...</p></div>';
+            metricsDiv.style.display = 'none';
+            
+            // Show AI loading state
+            aiBox.style.display = 'block';
+            aiText.innerHTML = '<span class="ai-loading"> Analyzing documents...</span>';
+
+            try {
+                const response = await fetch(`${API_BASE}/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dataset, method, query })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Search failed');
+                }
+
+                const data = await response.json();
+
+                // 1. Update Metrics & Spell Check
+                if (data.metrics) {
+                    metricsDiv.style.display = 'block';
+                    let metricsHtml = `
+                        <span class="metric-item"> Retrieval Time: <span class="metric-value">${data.metrics.search_time_ms}ms</span></span>
+                        <span class="metric-item"> RAG Time: <span class="metric-value">${data.metrics.rag_time_ms}ms</span></span>
+                        <span class="metric-item"> Total Time: <span class="metric-value">${data.metrics.total_time_ms}ms</span></span>
+                    `;
+
+                    // Show "Did you mean?" if correction exists
+                    if (data.did_you_mean) {
+                        metricsHtml += `
+                            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee;">
+                                <span style="color: #d93025;">Did you mean: </span>
+                                <span class="did-you-mean" onclick="document.getElementById('search-query').value='${data.did_you_mean}'; performSearch();">
+                                    ${data.did_you_mean}
+                                </span>
+                            </div>
+                        `;
+                    }
+                    metricsDiv.innerHTML = metricsHtml;
+                }
+
+                // 2. Update AI Overview
+                if (data.ai_overview) {
+                    aiText.innerHTML = data.ai_overview; // Use innerHTML to render bold tags etc.
+                } else {
+                    aiBox.style.display = 'none';
+                }
+
+                // 3. Render Search Results
+                if (data.results.length === 0) {
+                    resultsDiv.innerHTML = '<p style="text-align: center; color: #999;">No results found</p>';
+                    return;
+                }
+
+                let html = '<div class="results-grid">';
+                data.results.forEach(result => {
+                    html += `
+                        <div class="result-card">
+                            <div class="result-rank">${result.rank}</div>
+                            <div class="result-title">${escapeHtml(result.title)}</div>
+                            <span class="result-score">Score: ${result.score.toFixed(3)}</span>
+                            <div class="result-summary">${escapeHtml(result.summary)}</div>
+                            <div class="result-id">ID: ${escapeHtml(result.doc_id)}</div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                resultsDiv.innerHTML = html;
+
+            } catch (error) {
+                aiBox.style.display = 'none';
+                metricsDiv.style.display = 'none';
+                resultsDiv.innerHTML = `<div class="error-message">Error: ${escapeHtml(error.message)}</div>`;
+            }
+        }
+
+        async function runEvaluation() {
+            const dataset = document.getElementById('comparison-dataset').value;
+            const resultsDiv = document.getElementById('comparison-results');
+
+            resultsDiv.innerHTML = '<div class="loading"><div class="spinner"></div><p>Evaluating on 50 test queries... This may take a few minutes.</p></div>';
+
+            try {
+                const response = await fetch(`${API_BASE}/evaluate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ dataset })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Evaluation failed');
+                }
+
+                const data = await response.json();
+                displayEvaluationResults(data.summary, data.improvements);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error-message">Error: ${escapeHtml(error.message)}</div>`;
+            }
+        }
+
+        function displayEvaluationResults(summary, improvements) {
+            const resultsDiv = document.getElementById('comparison-results');
+            if (!summary) {
+                resultsDiv.innerHTML = '<p class="error">No evaluation data available.</p>';
+                return;
+            }
+
+            const metrics = ['ndcg@10', 'p@5', 'p@10', 'map@10'];
+            const methods = ['tfidf', 'bm25', 'crossencoder'];
+
+            let html = '<table class="comparison-table"><thead><tr><th>Metric</th>';
+            methods.forEach(method => {
+                const name = method === 'tfidf' ? 'TF-IDF' : (method === 'bm25' ? 'BM25' : 'BM25+CrossEncoder');
+                html += `<th>${name}</th>`;
+            });
+            html += '</tr></thead><tbody>';
+
+            metrics.forEach(metric => {
+                html += '<tr><td><strong>' + metric.toUpperCase() + '</strong></td>';
+                methods.forEach(method => {
+                    // FIX 1: Safe access using optional chaining (?.) and fallback
+                    const methodData = summary[method];
+                    if (methodData && methodData[metric] !== undefined) {
+                        const value = methodData[metric].toFixed(4);
+                        html += `<td><span class="metric-value">${value}</span>`;
+
+                        // FIX 2: Only show improvement if improvements object exists for this method
+                        if (method !== 'tfidf' && method !== 'bm25' && improvements && improvements[method] && improvements[method][metric] !== undefined) {
+                            const imp = improvements[method][metric].toFixed(2);
+                            const className = imp >= 0 ? 'improvement-positive' : 'improvement-negative';
+                            html += ` <span class="${className}">${imp > 0 ? '+' : ''}${imp}%</span>`;
+                        }
+                        html += '</td>';
+                    } else {
+                        html += '<td><span class="metric-value">N/A</span></td>';
+                    }
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+
+            // Add charts
+            html += '<div class="comparison-charts">';
+
+            metrics.forEach(metric => {
+                html += `<div class="chart-container">
+                    <div class="chart-title">${metric.toUpperCase()}</div>
+                    <div class="bar-chart">`;
+
+                methods.forEach(method => {
+                    // FIX 3: Safe access for chart values
+                    const methodData = summary[method];
+                    if (methodData && methodData[metric] !== undefined) {
+                        const value = methodData[metric];
+                        const height = (value * 100) + '%';
+                        const color = method === 'tfidf' ? '#999' : (method === 'bm25' ? '#667eea' : '#764ba2');
+
+                        html += `
+                            <div class="bar" style="background: ${color}; height: ${height};">
+                                <div class="bar-value">${value.toFixed(3)}</div>
+                                <div class="bar-label">${method === 'tfidf' ? 'TF-IDF' : (method === 'bm25' ? 'BM25' : 'CE')}</div>
+                            </div>
+                        `;
+                    }
+                });
+
+                html += '</div></div>';
+            });
+
+            html += '</div>';
+            resultsDiv.innerHTML = html;
+        }
+
+
+
+        function showMessage(tab, message, type) {
+            const container = document.getElementById(tab + '-message');
+            if (container) {
+                container.className = type === 'error' ? 'error-message' : (type === 'success' ? 'success-message' : 'info-box');
+                container.textContent = message;
+                container.style.display = 'block';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
