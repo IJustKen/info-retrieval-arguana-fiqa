@@ -651,9 +651,8 @@ class SpellChecker:
 groq_api_key = "API_KEY"  # Get from https://console.groq.com/keys
 rag_agent = RAGGenerator(groq_api_key)
 
-# ============================================================================
+
 # API ENDPOINTS
-# ============================================================================
 
 @app.route('/api/datasets', methods=['GET'])
 def get_datasets():
